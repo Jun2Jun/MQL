@@ -26,6 +26,9 @@ string InpFileName = "RateInfo.csv";  // ファイル名
 string InpDirectoryName = "Data"; // ディレクトリ名 
 
 string UsePair[] = {"USDJPY", "EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "AUDUSD", "AUDJPY", "XAUUSD"}; // ペアは、ここに追加すれば自動的に対応可能。
+// サーバに問い合わせするときの通貨ペアの名称。FXTFの場合、通貨ペアに-cdがつくが、内部のファイルには-cdを付けたくないので、分けて使用する
+// RequestPairは、OnInit内で値を入れる。
+string RequestPair[] = {};
 
 /*
 string UsePair[] = {"USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD",
@@ -80,6 +83,9 @@ void OnInit()
   if(OutputRateInfo_Period_H4) UseTimeFrame[4] = true; else UseTimeFrame[4] = false;
   if(OutputRateInfo_Period_D1) UseTimeFrame[5] = true; else UseTimeFrame[5] = false;
   if(OutputRateInfo_Period_W1) UseTimeFrame[6] = true; else UseTimeFrame[6] = false;
+  
+  //RequetPairの設定。FXTFの場合、通貨ペアに"-cd"が付く
+  for(int i = 0; i < ArraySize(UsePair); i++) RequestPair[i] = UsePair[i] + "-cd";
 
   /*
   //TargetTimeFrameSetPosを計算しておく
@@ -128,14 +134,14 @@ int OnCalculate (const int rates_total,
       {
         if(UseTimeFrame[j] == true)
         {
-          if(DebugMode) Print("Start CopyRates: " + UsePair[i] + ", " + TimeFrameSet[j] + " at " + TimeToString(TimeCurrent(), TIME_DATE | TIME_MINUTES | TIME_SECONDS));
+          if(DebugMode) Print("Start CopyRates: " + RequestPair[i] + ", " + TimeFrameSet[j] + " at " + TimeToString(TimeCurrent(), TIME_DATE | TIME_MINUTES | TIME_SECONDS));
           // CopyRateがエラーなら飛ばす。自動的にサーバへ価格取得要求をするらしいので、次回更新する。
           ZeroMemory(mql_rates);
-          if(CopyRates(UsePair[i], TimeFrameSet[j], time_current, GetDataDepth, mql_rates) == -1)
-            Print("CopyRates Error: " + UsePair[i] + ", " + TimeFrameSet[j] + " at " + TimeToString(TimeCurrent()));
+          if(CopyRates(RequestPair[i], TimeFrameSet[j], time_current, GetDataDepth, mql_rates) == -1)
+            Print("CopyRates Error: " + RequestPair[i] + ", " + TimeFrameSet[j] + " at " + TimeToString(TimeCurrent()));
           else
           {
-            if(DebugMode) Print("End CopyRates: " + UsePair[i] + ", " + TimeFrameSet[j] + " at " + TimeToString(TimeCurrent(), TIME_DATE | TIME_MINUTES | TIME_SECONDS));
+            if(DebugMode) Print("End CopyRates: " + RequestPair[i] + ", " + TimeFrameSet[j] + " at " + TimeToString(TimeCurrent(), TIME_DATE | TIME_MINUTES | TIME_SECONDS));
             //Get latest year from RateInfo
             int oldest_mql_rates_year = TimeYear(mql_rates[ArraySize(mql_rates)-1].time);
   
